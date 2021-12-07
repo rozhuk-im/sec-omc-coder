@@ -1,4 +1,35 @@
+/*-
+ * Copyright (c) 2021 Rozhuk Ivan <rozhuk.im@gmail.com>
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ *
+ * Author: Rozhuk Ivan <rozhuk.im@gmail.com>
+ *
+ */
+
+/* Based on: https://github.com/fei-ke/OmcTextDecoder */
 /* cc sec-omc-coder.c -O0 -DDEBUG -lm -o sec-omc-coder */
+
 
 #include <sys/param.h>
 #include <sys/types.h>
@@ -67,8 +98,8 @@ static const uint8_t omc_key_xor[256] = {
 	0x48, 0x98, 0x29, 0xda, 0x7c, 0x48, 0x82, 0xdd
 };
 
-#define ROTL8(__b, __bits) (((__b) << (__bits)) | ((__b) >> (8 - (__bits))))
-#define ROTR8(__b, __bits) (((__b) >> (__bits)) | ((__b) << (8 - (__bits))))
+#define ROTL8(__b, __bits) ((uint8_t)(((__b) << (__bits)) | ((__b) >> (8 - (__bits)))))
+#define ROTR8(__b, __bits) ((uint8_t)(((__b) >> (__bits)) | ((__b) << (8 - (__bits)))))
 
 #define LOG_ERR_FMT(__err, __fmt, __args...)				\
 	    if (0 != (__err))						\
@@ -95,8 +126,7 @@ omc_encode_buf(const uint8_t *src, uint8_t *dst, const size_t size,
 
 	for (i = 0; i < size; i ++) {
 		idx = (0xff & (i + off));
-		dst[i] = (omc_key_xor[idx] ^
-		    ROTR8(src[i], omc_key_shift[idx]));
+		dst[i] = ROTR8((omc_key_xor[idx] ^ src[i]), omc_key_shift[idx]);
 	}
 }
 
@@ -107,7 +137,6 @@ main(int argc, char **argv) {
 	const char *in_fn = "/dev/stdin", *out_fn = "/dev/stdout";
 	uint8_t buf[65536];
 	ssize_t ior, iow;
-	size_t readed, woff;
 
 	if (1 == argc)
 		goto usage;
@@ -157,7 +186,7 @@ usage:
 	}
 
 	/* Process loop. */
-	for (readed = 0;;) {
+	for (size_t processed = 0;;) {
 		/* Read. */
 		ior = read(in_fd, buf, sizeof(buf));
 		if (-1 == ior) {
@@ -169,14 +198,15 @@ usage:
 			break;
 		/* Transform data. */
 		if (0 == op) { /* Decode. */
-			omc_decode_buf(buf, buf, ior, readed);
+			omc_decode_buf(buf, buf, (size_t)ior, processed);
 		} else { /* Encode. */
-			omc_encode_buf(buf, buf, ior, readed);
+			omc_encode_buf(buf, buf, (size_t)ior, processed);
 		}
-		readed += ior;
+		processed += (size_t)ior;
 		/* Write. */
-		for (woff = 0; woff < ior; woff += ior) {
-			iow = write(out_fd, (buf + woff), (ior - woff));
+		for (ssize_t woff = 0; woff < ior; woff += ior) {
+			iow = write(out_fd, (buf + woff),
+			    (size_t)(ior - woff));
 			if (-1 == iow) {
 				error = errno;
 				LOG_ERR_FMT(error,
