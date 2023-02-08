@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CodeLite_Project Name="sec-omc-coder" Version="11000" InternalType="Console">
+  <VirtualDirectory Name="workflows">
+    <File Name=".github/workflows/build-ubuntu-latest.yml"/>
+    <File Name=".github/workflows/build-macos-latest.yml"/>
+  </VirtualDirectory>
   <VirtualDirectory Name="root">
     <File Name="README.md"/>
   </VirtualDirectory>

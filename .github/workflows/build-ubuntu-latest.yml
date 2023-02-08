@@ -1,0 +1,26 @@
+name: build-ubuntu-latest
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        compiler: [gcc, clang]
+        include:
+          - compiler: gcc
+            cc: gcc
+            cxx: g++
+          - compiler: clang
+            cc: clang
+            cxx: clang++
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+
+    - name: Build
+      working-directory: ${{github.workspace}}/src
+      shell: bash
+      run: cc sec-omc-coder.c -lm -o sec-omc-coder
