@@ -5,7 +5,7 @@
     <File Name=".github/workflows/build-macos-latest.yml"/>
   </VirtualDirectory>
   <VirtualDirectory Name="root">
-    <File Name="README.md"/>
+    <File Name="readme.md"/>
   </VirtualDirectory>
   <Description/>
   <Dependencies/>
