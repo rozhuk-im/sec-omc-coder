@@ -101,10 +101,10 @@ static const uint8_t omc_key_xor[256] = {
 #define ROTL8(__b, __bits) ((uint8_t)(((__b) << (__bits)) | ((__b) >> (8 - (__bits)))))
 #define ROTR8(__b, __bits) ((uint8_t)(((__b) >> (__bits)) | ((__b) << (8 - (__bits)))))
 
-#define LOG_ERR_FMT(__err, __fmt, __args...)				\
-	    if (0 != (__err))						\
-		fprintf(stderr, "Error: %i - %s - " __fmt "\n",		\
-		    (__err), strerror((__err)), ##__args)
+#define LOG_ERR_FMT(_err, _fmt, _args...)				\
+	    if (0 != (_err))						\
+		fprintf(stderr, "Error: %i - %s - " _fmt "\n",		\
+		    (_err), strerror((_err)), ##_args)
 
 
 static inline void
